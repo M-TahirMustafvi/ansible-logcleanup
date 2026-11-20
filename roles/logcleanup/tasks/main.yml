@@ -14,6 +14,9 @@
     group: root
     mode: "0755"
     validate: bash -n %s
+  notify: Audit logcleanup script change to syslog
+  tags:
+    - script
 
 - name: Setup cleanup cron
   ansible.builtin.cron:
@@ -23,3 +26,5 @@
     minute: "{{ logcleanup_minute }}"
     hour: "{{ logcleanup_hour }}"
     job: "{{ logcleanup_script_path }}"
+  tags:
+    - cron

@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MIT-0
+---
+- name: Audit logcleanup script change to syslog
+  ansible.builtin.command:
+    argv:
+      - logger
+      - -t
+      - logcleanup
+      - "audit: {{ logcleanup_script_path }} deployed or updated by Ansible"
+  changed_when: false
