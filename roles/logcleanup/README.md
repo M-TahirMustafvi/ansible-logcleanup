@@ -8,13 +8,21 @@ Defaults live in `defaults/main.yml`:
 
 | Variable | Default | Description |
 |---|---|---|
-| `logcleanup_log_dir` | `/var/log/myapp` | Directory to clean |
-| `logcleanup_retention_days` | `7` | Delete files older than this many days |
-| `logcleanup_file_suffix` | `*.log` | Filename pattern to match |
 | `logcleanup_script_path` | `/usr/local/bin/logcleanup.sh` | Where the script is installed |
-| `logcleanup_minute` | `30` | Cron minute |
-| `logcleanup_hour` | `2` | Cron hour |
-| `logcleanup_dry_run` | `false` | Only list matching files instead of deleting |
+| `logcleanup_jobs` | one `myapp` job | List of cleanup jobs, one cron line each |
+
+Each job in `logcleanup_jobs` takes:
+
+| Key | Required | Default | Description |
+|---|---|---|---|
+| `name` | yes | | Unique job name, used in the cron entry name |
+| `dir` | yes | | Directory to clean |
+| `pattern` | yes | | Filename pattern, e.g. `*.log` |
+| `retention_days` | yes | | Delete files older than this many days |
+| `minute` | no | `30` | Cron minute |
+| `hour` | no | `2` | Cron hour |
+
+Setting `logcleanup_jobs` in group_vars replaces the default list; it is not merged.
 
 ## Example Playbook
 
@@ -24,7 +32,11 @@ Defaults live in `defaults/main.yml`:
   become: true
   roles:
     - role: logcleanup
-      logcleanup_retention_days: "14"
+      logcleanup_jobs:
+        - name: myapp
+          dir: /var/log/myapp
+          pattern: "*.log"
+          retention_days: 14
 ```
 
 ## License

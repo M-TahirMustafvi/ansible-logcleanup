@@ -2,10 +2,11 @@
 ---
 # defaults file for roles/logcleanup
 
-logcleanup_log_dir: "/var/log/myapp"
-logcleanup_retention_days: "7"
-logcleanup_file_suffix: "*.log"
 logcleanup_script_path: "/usr/local/bin/logcleanup.sh"
-logcleanup_minute: "30"
-logcleanup_hour: "2"
-logcleanup_dry_run: false
+
+# Each job: name, dir, pattern, retention_days (required); minute, hour (optional)
+logcleanup_jobs:
+  - name: myapp
+    dir: /var/log/myapp
+    pattern: "*.log"
+    retention_days: 7

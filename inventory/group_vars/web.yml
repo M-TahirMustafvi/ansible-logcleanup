@@ -1,0 +1,12 @@
+---
+# Replaces logcleanup_jobs from role defaults, so myapp is repeated here
+logcleanup_jobs:
+  - name: myapp
+    dir: /var/log/myapp
+    pattern: "*.log"
+    retention_days: 7
+  - name: nginx
+    dir: /var/log/nginx
+    pattern: "*.gz"
+    retention_days: 14
+    hour: "4"

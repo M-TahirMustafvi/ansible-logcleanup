@@ -1,30 +1,46 @@
 # SPDX-License-Identifier: MIT-0
 ---
-- name: Ensure log directory exists
+- name: Ensure job directories exist
   ansible.builtin.file:
-    path: "{{ logcleanup_log_dir }}"
+    path: "{{ item.dir }}"
     state: directory
     mode: "0755"
+  loop: "{{ logcleanup_jobs }}"
+  loop_control:
+    label: "{{ item.name }}"
 
 - name: Deploy logcleanup script
-  ansible.builtin.template:
-    src: logcleanup.sh.j2
+  ansible.builtin.copy:
+    src: logcleanup.sh
     dest: "{{ logcleanup_script_path }}"
     owner: root
     group: root
     mode: "0755"
-    validate: bash -n %s
   notify: Audit logcleanup script change to syslog
   tags:
     - script
 
-- name: Setup cleanup cron
+- name: Remove legacy single-job cron entry
   ansible.builtin.cron:
     name: log cleanup
     cron_file: logcleanup
     user: root
-    minute: "{{ logcleanup_minute }}"
-    hour: "{{ logcleanup_hour }}"
-    job: "{{ logcleanup_script_path }}"
+    state: absent
+  tags:
+    - cron
+
+- name: Ensure cleanup jobs are scheduled
+  ansible.builtin.cron:
+    name: "logcleanup {{ item.name }}"
+    cron_file: logcleanup
+    user: root
+    minute: "{{ item.minute | default('30') }}"
+    hour: "{{ item.hour | default('2') }}"
+    job: >-
+      {{ logcleanup_script_path }}
+      {{ item.dir | quote }} {{ item.pattern | quote }} {{ item.retention_days }}
+  loop: "{{ logcleanup_jobs }}"
+  loop_control:
+    label: "{{ item.name }}"
   tags:
     - cron
