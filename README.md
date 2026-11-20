@@ -9,13 +9,23 @@ Built as a learning project against a local Vagrant lab of three VMs.
 
 ## What it does
 
-On every host in the inventory, the `logcleanup` role:
+Cleanup jobs are described as data. Each job names a directory, a filename
+pattern and how many days to keep files. On every host, the `logcleanup` role:
 
-1. Creates the log directory if it is missing.
-2. Deploys `/usr/local/bin/logcleanup.sh`, which deletes matching files older
-   than the retention period and logs how many it removed.
-3. Adds a cron entry in `/etc/cron.d/logcleanup` that runs the script nightly.
+1. Creates each job's directory if it is missing.
+2. Deploys one generic script, `/usr/local/bin/logcleanup.sh DIR PATTERN DAYS`,
+   which deletes matching files older than DAYS and logs how many it removed.
+   It refuses to run on `/`, on a missing directory or with a bad DAYS value.
+3. Adds one cron entry per job in `/etc/cron.d/logcleanup`.
 4. Writes an audit line to syslog whenever the script is deployed or changed.
+
+Default jobs per group:
+
+| Job | Directory | Pattern | Keep | Runs | Hosts |
+|---|---|---|---|---|---|
+| myapp | /var/log/myapp | *.log | 7 days | 02:30 | all |
+| nginx | /var/log/nginx | *.gz | 14 days | 04:30 | web |
+| pgdump | /var/backups/pg | *.sql.gz | 3 days | 03:15 | db |
 
 ## Project layout
 
@@ -24,13 +34,16 @@ On every host in the inventory, the `logcleanup` role:
 ├── ansible.cfg              # inventory path, remote user, Python interpreter
 ├── site.yml                 # playbook: applies the logcleanup role to all hosts
 ├── inventory/
-│   └── hosts.yml            # web1, web2 (group: web) and db1 (group: db)
+│   ├── hosts.yml            # web1, web2 (group: web) and db1 (group: db)
+│   └── group_vars/
+│       ├── web.yml          # myapp + nginx jobs
+│       └── db.yml           # myapp + pgdump jobs
 └── roles/
     └── logcleanup/
-        ├── defaults/main.yml    # overridable settings
+        ├── defaults/main.yml    # default job list
+        ├── files/logcleanup.sh  # generic cleanup script
         ├── tasks/main.yml       # directory, script and cron tasks
         ├── handlers/main.yml    # syslog audit handler
-        ├── templates/           # logcleanup.sh.j2
         ├── meta/main.yml        # role metadata
         └── README.md            # role variables and usage
 ```
@@ -74,27 +87,39 @@ Run only part of the role with tags:
 |---|---|
 | `logcleanup` | The whole role |
 | `script` | Only the script deployment |
-| `cron` | Only the cron schedule |
+| `cron` | Only the cron schedules |
 
 ```bash
 ansible-playbook site.yml --tags cron
 ```
 
-### Changing the settings
+### Adding or changing jobs
 
-All settings and their defaults are listed in the
-[role README](roles/logcleanup/README.md). Override them in the playbook, in
-`inventory/group_vars/`, or on the command line:
+Edit the `logcleanup_jobs` list in `inventory/group_vars/<group>.yml`:
 
-```bash
-ansible-playbook site.yml -e logcleanup_dry_run=true
+```yaml
+logcleanup_jobs:
+  - name: myapp
+    dir: /var/log/myapp
+    pattern: "*.log"
+    retention_days: 7
+  - name: nginx
+    dir: /var/log/nginx
+    pattern: "*.gz"
+    retention_days: 14
+    hour: "4"          # optional, default "2"
+    minute: "30"       # optional, default "30"
 ```
+
+A group's list replaces the default list from the role, so repeat any job
+that group should keep. All keys are described in the
+[role README](roles/logcleanup/README.md).
 
 ## Verifying on a host
 
 ```bash
 cat /etc/cron.d/logcleanup             # the scheduled job
-sudo /usr/local/bin/logcleanup.sh      # run a cleanup now
+sudo /usr/local/bin/logcleanup.sh /var/log/myapp '*.log' 7   # run one job now
 journalctl -t logcleanup               # cleanup runs and deployment audits
 ```
 
