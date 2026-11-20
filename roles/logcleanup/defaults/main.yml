@@ -1,0 +1,10 @@
+#SPDX-License-Identifier: MIT-0
+---
+# defaults file for roles/logcleanup
+
+logcleanup_log_dir: "/var/log/myapp"
+logcleanup_retention_days: "7"
+logcleanup_file_suffix: "*.log"
+logcleanup_script_path: "/usr/local/bin/logcleanup.sh"
+logcleanup_minute: "30"
+logcleanup_hour: "2"

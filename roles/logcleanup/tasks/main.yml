@@ -1,0 +1,25 @@
+#SPDX-License-Identifier: MIT-0
+---
+- name: Ensure log Directory exists
+  ansible.builtin.file:
+    path: "{{ logcleanup_log_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Deploy logcleanup script
+  ansible.builtin.template:
+    src: logcleanup.sh.j2
+    dest: "{{ logcleanup_script_path }}"
+    owner: root
+    group: root
+    mode: "0755"
+    validate: bash -n %s
+
+- name: Setup cleanup cron
+  ansible.builtin.cron:
+    name: log cleanup
+    cron_file: logcleanup
+    user: root
+    minute: "{{ logcleanup_minute }}"
+    hour: "{{ logcleanup_hour }}"
+    job: "{{ logcleanup_script_path }}"

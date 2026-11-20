@@ -1,0 +1,7 @@
+---
+- name: Logcleanup Playbook
+  hosts: all
+  become: true
+  roles:
+    - role: logcleanup 
+
