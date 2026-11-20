@@ -1,4 +1,4 @@
-#SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: MIT-0
 ---
 # defaults file for roles/logcleanup
 
@@ -8,3 +8,4 @@ logcleanup_file_suffix: "*.log"
 logcleanup_script_path: "/usr/local/bin/logcleanup.sh"
 logcleanup_minute: "30"
 logcleanup_hour: "2"
+logcleanup_dry_run: false

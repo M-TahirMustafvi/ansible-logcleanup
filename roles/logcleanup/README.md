@@ -1,38 +1,32 @@
-Role Name
-=========
+# logcleanup
 
-A brief description of the role goes here.
+Deploys a shell script that deletes old log files and schedules it with cron.
 
-Requirements
-------------
+## Role Variables
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+Defaults live in `defaults/main.yml`:
 
-Role Variables
---------------
+| Variable | Default | Description |
+|---|---|---|
+| `logcleanup_log_dir` | `/var/log/myapp` | Directory to clean |
+| `logcleanup_retention_days` | `7` | Delete files older than this many days |
+| `logcleanup_file_suffix` | `*.log` | Filename pattern to match |
+| `logcleanup_script_path` | `/usr/local/bin/logcleanup.sh` | Where the script is installed |
+| `logcleanup_minute` | `30` | Cron minute |
+| `logcleanup_hour` | `2` | Cron hour |
+| `logcleanup_dry_run` | `false` | Only list matching files instead of deleting |
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+## Example Playbook
 
-Dependencies
-------------
+```yaml
+- name: Logcleanup Playbook
+  hosts: all
+  become: true
+  roles:
+    - role: logcleanup
+      logcleanup_retention_days: "14"
+```
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+## License
 
-Example Playbook
-----------------
-
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+MIT
